@@ -1,7 +1,7 @@
 const express = require("express");
 const app = express();
 
-const TOKEN = "حط_التوكن_تاعك";
+const TOKEN = "8620221086:AAFjQUKcdpo1a1ThRtBgLHAwBVo9CZeK2yE";
 
 app.use(express.json());
 
