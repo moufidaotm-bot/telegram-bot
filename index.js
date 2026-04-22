@@ -18,7 +18,7 @@ app.post("/", async (req, res) => {
     if (!users[chatId]) users[chatId] = { step: 0 };
 
     let reply = {};
-    let keyboard = null;
+    let keyboard;
 
     // 🟢 START
     if (text === "/start") {
@@ -76,7 +76,6 @@ app.post("/", async (req, res) => {
 
       await sendMessage(ADMIN_CHAT_ID, adminMsg);
 
-      // 🔄 Reset
       users[chatId] = { step: 0 };
     }
 
@@ -94,14 +93,14 @@ app.post("/", async (req, res) => {
       reply.text = "⚠️ اكتب /start باش تبدا";
     }
 
-    // إرسال الرد
+    // 🔥 إرسال الرسالة + FIX MENU
     await fetch(`https://api.telegram.org/bot${TOKEN}/sendMessage`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         chat_id: chatId,
         text: reply.text,
-        reply_markup: keyboard || undefined
+        ...(keyboard && { reply_markup: keyboard })
       }),
     });
   }
