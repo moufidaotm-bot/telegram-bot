@@ -22,18 +22,29 @@ app.post("/", async (req, res) => {
 
     // 🟢 START
     if (text === "/start") {
-      users[chatId] = { step: 0 };
+  users[chatId] = { step: 0 };
 
-      reply.text = "👋 مرحبا بيك\nأنا نعاونك تبني تطبيق أو موقع احترافي 💻\n\nاختار:";
+  // حذف keyboard القديم
+  await fetch(`https://api.telegram.org/bot${TOKEN}/sendMessage`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      chat_id: chatId,
+      text: "🔄 تحميل القائمة...",
+      reply_markup: { remove_keyboard: true }
+    }),
+  });
 
-      keyboard = {
-        keyboard: [
-          ["📱 تطبيق", "🌐 موقع"],
-          ["💼 شوف أعمالي", "📞 تواصل معي"]
-        ],
-        resize_keyboard: true
-      };
-    }
+  reply.text = "👋 مرحبا بيك\nاختار:";
+
+  keyboard = {
+    keyboard: [
+      [{ text: "📱 تطبيق" }, { text: "🌐 موقع" }],
+      [{ text: "💼 شوف أعمالي" }, { text: "📞 تواصل معي" }]
+    ],
+    resize_keyboard: true
+  };
+}
 
     // 🟢 اختيار الخدمة
     else if (text === "📱 تطبيق" || text === "🌐 موقع") {
