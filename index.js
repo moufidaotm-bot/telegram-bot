@@ -15,41 +15,67 @@ app.post("/", async (req, res) => {
     const chatId = message.chat.id;
     const text = message.text;
 
-    
-
     if (!users[chatId]) users[chatId] = { step: 0 };
 
-    let reply = "";
+    let reply = {};
+    let keyboard;
 
+    // 🟢 START
     if (text === "/start") {
-      users[chatId].step = 1;
-      reply = "👋 مرحبا\nنصمم تطبيقات ومواقع احترافية\n\nوش تحب؟\n1- تطبيق 📱\n2- موقع 🌐";
-    }
+  users[chatId] = { step: 0 };
 
-    else if (users[chatId].step === 1) {
+  // حذف keyboard القديم
+  await fetch(`https://api.telegram.org/bot${TOKEN}/sendMessage`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      chat_id: chatId,
+      text: "🔄 تحميل القائمة...",
+      reply_markup: { remove_keyboard: true }
+    }),
+  });
+
+  reply.text = "👋 مرحبا بيك\nاختار:";
+
+  keyboard = {
+    keyboard: [
+      [{ text: "📱 تطبيق" }, { text: "🌐 موقع" }],
+      [{ text: "💼 شوف أعمالي" }, { text: "📞 تواصل معي" }]
+    ],
+    resize_keyboard: true
+  };
+}
+
+    // 🟢 اختيار الخدمة
+    else if (text === "📱 تطبيق" || text === "🌐 موقع") {
       users[chatId].type = text;
-      users[chatId].step = 2;
-      reply = "📌 صفلي المشروع تاعك";
+      users[chatId].step = 1;
+
+      reply.text = "📌 صفلي المشروع تاعك بالتفصيل";
     }
 
-    else if (users[chatId].step === 2) {
+    // 🟢 الفكرة
+    else if (users[chatId].step === 1) {
       users[chatId].idea = text;
-      users[chatId].step = 3;
-      reply = "💰 الميزانية تاعك؟";
+      users[chatId].step = 2;
+
+      reply.text = "💰 الميزانية تاعك؟ (مثال: 10000 دج)";
     }
 
-    else if (users[chatId].step === 3) {
+    // 🟢 الميزانية
+    else if (users[chatId].step === 2) {
       users[chatId].budget = text;
-      users[chatId].step = 4;
-      reply = "📞 رقم الهاتف";
+      users[chatId].step = 3;
+
+      reply.text = "📞 رقم الهاتف أو واتساب";
     }
 
-    else if (users[chatId].step === 4) {
+    // 🟢 FINAL
+    else if (users[chatId].step === 3) {
       users[chatId].phone = text;
 
-      reply = "✅ تم تسجيل طلبك، راح نتواصل معاك قريب";
+      reply.text = "✅ تم تسجيل طلبك، راح نتواصل معاك قريب\n\n🔁 اكتب /start لطلب جديد";
 
-      // 🚀 إرسال الطلب ليك
       let adminMsg = `
 🔥 Client جديد
 
@@ -59,32 +85,49 @@ app.post("/", async (req, res) => {
 📞 الهاتف: ${users[chatId].phone}
       `;
 
-      await fetch(`https://api.telegram.org/bot${TOKEN}/sendMessage`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          chat_id: ADMIN_CHAT_ID,
-          text: adminMsg,
-        }),
-      });
+      await sendMessage(ADMIN_CHAT_ID, adminMsg);
+
+      users[chatId] = { step: 0 };
+    }
+
+    // 🟢 Portfolio
+    else if (text === "💼 شوف أعمالي") {
+      reply.text = "🎨 أعمالي:\n\n- تطبيق إدارة\n- موقع تجارة إلكترونية\n\n📩 اطلب مشروعك من /start";
+    }
+
+    // 🟢 Contact
+    else if (text === "📞 تواصل معي") {
+      reply.text = "📞 تواصل مباشر:\nWhatsApp: 0783089765\nTelegram: @Moufidaotm";
     }
 
     else {
-      reply = "اكتب /start";
+      reply.text = "⚠️ اكتب /start باش تبدا";
     }
 
-    // رد للمستخدم
+    // 🔥 إرسال الرسالة + FIX MENU
     await fetch(`https://api.telegram.org/bot${TOKEN}/sendMessage`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         chat_id: chatId,
-        text: reply,
+        text: reply.text,
+        ...(keyboard && { reply_markup: keyboard })
       }),
     });
   }
 
   res.send("ok");
 });
+
+async function sendMessage(chat_id, text) {
+  await fetch(`https://api.telegram.org/bot${TOKEN}/sendMessage`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      chat_id,
+      text,
+    }),
+  });
+}
 
 app.listen(3000, () => console.log("Bot running"));
