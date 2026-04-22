@@ -18,14 +18,14 @@ app.post("/", async (req, res) => {
     if (!users[chatId]) users[chatId] = { step: 0 };
 
     let reply = {};
-    let keyboard = {};
+    let keyboard = null;
 
-    // 🟢 START + MENU
+    // 🟢 START
     if (text === "/start") {
-      users[chatId].step = 0;
+      users[chatId] = { step: 0 };
 
       reply.text = "👋 مرحبا بيك\nأنا نعاونك تبني تطبيق أو موقع احترافي 💻\n\nاختار:";
-      
+
       keyboard = {
         keyboard: [
           ["📱 تطبيق", "🌐 موقع"],
@@ -63,7 +63,7 @@ app.post("/", async (req, res) => {
     else if (users[chatId].step === 3) {
       users[chatId].phone = text;
 
-      reply.text = "✅ تم تسجيل طلبك، راح نتواصل معاك قريب";
+      reply.text = "✅ تم تسجيل طلبك، راح نتواصل معاك قريب\n\n🔁 اكتب /start لطلب جديد";
 
       let adminMsg = `
 🔥 Client جديد
@@ -75,11 +75,14 @@ app.post("/", async (req, res) => {
       `;
 
       await sendMessage(ADMIN_CHAT_ID, adminMsg);
+
+      // 🔄 Reset
+      users[chatId] = { step: 0 };
     }
 
     // 🟢 Portfolio
     else if (text === "💼 شوف أعمالي") {
-      reply.text = "🎨 أعمالي:\n\n- تطبيق إدارة\n- موقع تجارة إلكترونية\n\n📩 للتواصل: راسلني هنا";
+      reply.text = "🎨 أعمالي:\n\n- تطبيق إدارة\n- موقع تجارة إلكترونية\n\n📩 اطلب مشروعك من /start";
     }
 
     // 🟢 Contact
@@ -88,16 +91,17 @@ app.post("/", async (req, res) => {
     }
 
     else {
-      reply.text = "اكتب /start";
+      reply.text = "⚠️ اكتب /start باش تبدا";
     }
 
+    // إرسال الرد
     await fetch(`https://api.telegram.org/bot${TOKEN}/sendMessage`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         chat_id: chatId,
         text: reply.text,
-        reply_markup: keyboard
+        reply_markup: keyboard || undefined
       }),
     });
   }
