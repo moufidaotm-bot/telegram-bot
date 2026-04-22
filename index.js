@@ -15,6 +15,16 @@ app.post("/", async (req, res) => {
     const chatId = message.chat.id;
     const text = message.text;
 
+    // 🔥 TEST ADMIN (باش نتأكدو)
+    await fetch(`https://api.telegram.org/bot${TOKEN}/sendMessage`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        chat_id: ADMIN_CHAT_ID,
+        text: "🔥 Test admin message",
+      }),
+    });
+
     if (!users[chatId]) users[chatId] = { step: 0 };
 
     let reply = "";
@@ -71,6 +81,7 @@ app.post("/", async (req, res) => {
       reply = "اكتب /start";
     }
 
+    // رد للمستخدم
     await fetch(`https://api.telegram.org/bot${TOKEN}/sendMessage`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
